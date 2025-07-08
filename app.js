@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 const authRoutes = require('./routes/auth');
 
 const app = express();
@@ -10,6 +11,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Middleware to parse URL-encoded bodies (from forms)
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Use authentication routes
 app.use('/', authRoutes);
