@@ -12,6 +12,21 @@ exports.getLogin = (req, res) => {
     res.render('login', { message: req.query.message });
 };
 
+exports.redirectIfLoggedIn = (req, res, next) => {
+    const token = req.cookies.token;
+
+    if (token) {
+        jwt.verify(token, JWT_SECRET, (err, decoded) => {
+            if (!err) {
+                return res.redirect('/dashboard');
+            }
+            next(); // Token invalid, proceed to next middleware (e.g., login page)
+        });
+    } else {
+        next(); // No token, proceed to next middleware
+    }
+};
+
 exports.postLogin = (req, res) => {
     const { username, password } = req.body;
 
