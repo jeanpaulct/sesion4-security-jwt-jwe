@@ -35,16 +35,26 @@ exports.getLogin = (req, res) => {
     res.render('login', { message: req.query.message });
 };
 
-exports.redirectIfLoggedIn = (req, res, next) => {
-    const token = req.cookies.token;
+exports.redirectIfLoggedIn = async (req, res, next) => {
 
-    if (token) {
-        jwt.verify(token, JWT_SECRET, (err, decoded) => {
-            if (!err) {
-                return res.redirect('/dashboard');
-            }
-            next(); // Token invalid, proceed to next middleware (e.g., login page)
-        });
+    const encryptedToken = req.cookies.token;
+
+    if (encryptedToken) {
+        try {
+            // Decrypt the token using JWE
+            const { plaintext } = await jose.compactDecrypt(encryptedToken, jweKey);
+            const token = new TextDecoder().decode(plaintext);
+
+            jwt.verify(token, JWT_SECRET, (err, decoded) => {
+                if (!err) {
+                    return res.redirect('/dashboard');
+                }
+                next(); // Token invalid, proceed to next middleware (e.g., login page)
+            });
+        } catch (err) {
+            console.error("JWE Decryption Error:", err);
+            next();
+        }
     } else {
         next(); // No token, proceed to next middleware
     }
